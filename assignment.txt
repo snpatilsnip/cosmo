@@ -1,0 +1,133 @@
+create table school1
+(
+school_id int primary key identity,
+school_name varchar(40),
+school_city varchar(40),
+school_state varchar(40),
+school_contact varchar(20)
+)
+
+
+create table student2
+(
+student_id int primary key identity,
+student_name varchar(40),
+student_dob varchar(30),
+student_city varchar(40),
+school_id int foreign key references school1(school_id)
+)
+
+
+select *from school1
+select * from student2
+
+
+
+create procedure school_student_insert(
+@school_name varchar(100),
+@school_city varchar(50),
+@school_state varchar(50),
+@school_contact varchar(50),
+
+@student_name varchar(100),
+@student_dob varchar(15),
+@student_city varchar(50)
+)
+as 
+begin
+insert into school1(school_name,school_city,school_state,school_contact)values
+(@school_name,@school_city,@school_state,@school_contact)
+declare @id int
+select @id=SCOPE_IDENTITY()
+insert into student2(school_id,student_name,student_dob,student_city)values
+(@id,@student_name,@student_dob,@student_city)
+end
+
+
+exec school_student_insert 'abc','karnataka','banglore','123456','def','07-02-1992','mumbai' 
+
+
+select * from school1
+select * from student2
+
+create procedure fetchdata
+(
+@id varchar(10)
+)
+as
+begin
+ if(isnull(@id,'') != '')
+ begin
+select school_name,school_city,school_state,school_contact,student_name,student_dob,student_city
+from school1  join student2
+on school1.school_id=student2.school_id
+and student2.school_id=@id
+end
+else
+begin 
+select  school_name,school_city,school_state,school_contact,student_name,student_dob,student_city
+from school1 join student2
+on school1.school_id=student2.school_id
+ end
+end 
+
+exec fetchdata '1'
+
+
+CREATE PROCEDURE case_checking
+@id int = NULL,
+@student_name varchar(40)= NULL
+
+AS
+BEGIN
+SET NOCOUNT ON    
+
+IF ((@id IS NOT NULL) AND (@student_name IS NOT NULL))
+   BEGIN
+       select school_name,school_city,school_state,school_contact,student_name,student_dob,student_city
+from school1  join student2
+on school1.school_id=student2.school_id
+and student2.school_id=@id
+   END 
+
+IF ((@id IS NOT NULL) AND (@student_name IS NULL))
+   BEGIN
+       select school_name,school_city,school_state,school_contact,student_name,student_dob,student_city
+from school1  join student2
+on school1.school_id=student2.school_id
+and student2.school_id=@id
+   END
+
+IF ((@id IS NULL) AND (@student_name IS NOT NULL))
+   BEGIN
+       select school_name,school_city,school_state,school_contact,student_name,student_dob,student_city
+	   from school1  join student2
+	   on school1.school_id=student2.school_id
+	   and student2.school_id=@id
+   END
+
+IF ((@id IS NULL) AND (@student_name IS NULL))
+   BEGIN
+       select  school_name,school_city,school_state,school_contact,student_name,student_dob,student_city
+from school1 join student2
+on school1.school_id=student2.school_id
+   END
+   end
+
+
+   exec case_checking 1
+
+ALTER PROCEDURE [dbo].[case_using]
+@id int,
+@student_name varchar(40)
+
+AS
+BEGIN
+select school_name,school_city,school_state,school_contact,student_name,student_dob,student_city
+from school1  join student2
+on school1.school_id=student2.school_id
+where 1=(case when(@id!=0) then (case when (student2.school_id=@id) then 1 else 0 end)else 1 end) and
+(1=case when(@student_name!='')then (case when (student2.student_name = @student_name) then 1 else 0 end) else 1 end)
+end
+
+exec case_using 0,''
